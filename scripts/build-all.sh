@@ -5,12 +5,12 @@
 set -e
 
 echo "Building Linux binary..."
-cargo +nightly build --release
+cargo build --release
 echo "✅ Linux: target/release/nust"
 
 if command -v x86_64-w64-mingw32-gcc &> /dev/null; then
     echo "Building Windows binary..."
-    cargo +nightly build --release --target x86_64-pc-windows-gnu
+    cargo build --release --target x86_64-pc-windows-gnu
     echo "✅ Windows: target/x86_64-pc-windows-gnu/release/nust.exe"
 else
     echo "⚠️  Skipping Windows build (mingw-w64 not installed)"

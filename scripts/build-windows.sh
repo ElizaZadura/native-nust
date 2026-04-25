@@ -6,7 +6,7 @@
 set -e
 
 echo "Building Windows binary..."
-cargo +nightly build --release --target x86_64-pc-windows-gnu
+cargo build --release --target x86_64-pc-windows-gnu
 
 echo "✅ Windows binary built: target/x86_64-pc-windows-gnu/release/nust.exe"
 echo "Copy to Windows and run natively for testing!"

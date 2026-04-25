@@ -13,19 +13,19 @@ This guide explains how to build native binaries for Linux, Windows, and macOS.
 
 #### On Linux (build for Linux)
 ```bash
-cargo +nightly build --release
+cargo build --release
 # Binary: target/release/nust
 ```
 
 #### On Windows (build for Windows)
 ```powershell
-cargo +nightly build --release
+cargo build --release
 # Binary: target/release/nust.exe
 ```
 
 #### On macOS (build for macOS)
 ```bash
-cargo +nightly build --release
+cargo build --release
 # Binary: target/release/nust
 ```
 
@@ -40,7 +40,7 @@ rustup target add x86_64-pc-windows-gnu
 sudo apt install gcc-mingw-w64-x86-64
 
 # Build
-cargo +nightly build --release --target x86_64-pc-windows-gnu
+cargo build --release --target x86_64-pc-windows-gnu
 # Binary: target/x86_64-pc-windows-gnu/release/nust.exe
 ```
 
@@ -50,7 +50,7 @@ Cross-compiling to macOS from Linux is complex and not recommended. Use a macOS 
 ### Windows → Linux (WSL)
 ```powershell
 # In WSL
-cargo +nightly build --release
+cargo build --release
 # Binary: target/release/nust
 ```
 
