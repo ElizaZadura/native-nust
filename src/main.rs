@@ -147,7 +147,7 @@ impl eframe::App for App {
             .show(ctx, |ui| {
                 let resp = ui.interact(
                     ui.max_rect(),
-                    egui::Id::new("drag_strip"),
+                    egui::Id::new("drag_strip_sense"),
                     egui::Sense::click_and_drag(),
                 );
                 if resp.drag_started() {
