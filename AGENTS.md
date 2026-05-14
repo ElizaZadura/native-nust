@@ -1,30 +1,42 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
-- `src/main.rs` contains the entire eframe/egui application, including pane state, command palette, and file operations.
-- `docs/` stores design notes such as `todo.md`; keep planning or research artifacts here.
-- Quick-save artifacts land in `target/quick_saves/`; they stay out of Git via `.gitignore`.
+## Stack
+Tauri 2 + Vite + TypeScript + CodeMirror 6, targeting Windows-native. The previous egui prototype lives under `legacy/` for reference only.
 
-## Build, Test, and Development Commands
-- `cargo run` — Build and launch the GUI.
-- `cargo fmt` — Format Rust sources with rustfmt; run before committing.
-- `cargo check` — Type-check without running the GUI (first run may take longer while caching deps).
+## Project Structure
+- `index.html`, `src/main.ts`, `src/style.css` — frontend (CodeMirror editor, toolbar, dialogs).
+- `src-tauri/src/main.rs` — Rust commands (`read_file`, `write_file`) and Tauri runtime setup.
+- `src-tauri/tauri.conf.json` — window/build config.
+- `src-tauri/capabilities/default.json` — Tauri 2 permission grants for the main window.
+- `docs/` — design notes and historical migration docs.
+- `legacy/` — archived egui implementation; do not import from it.
 
-## Coding Style & Naming Conventions
-- Follow Rust 2024 idioms; rely on `rustfmt` for layout (4-space indentation).
-- Keep UI actions and state localized in `App`; add helper structs/enums when functionality grows.
-- Status strings should be short and actionable ("Split view enabled").
-- Name quick-save files with the existing `nust_<pane>_<timestamp>.txt` scheme for consistency.
+## Build, Test, Development
+- `npm install` — first-time setup.
+- `npm run tauri dev` — run the app with hot reload (frontend + backend).
+- `npm run tauri build` — produce installers (`src-tauri/target/release/bundle/`).
+- `npm run build` — type-check + bundle frontend only.
+- `cd src-tauri && cargo check` — type-check backend only.
+- `cd src-tauri && cargo fmt` — format Rust sources.
 
-## Testing Guidelines
-- No formal test suite yet. Manually verify additions via `cargo run`, focusing on pane interactions, command palette navigation (Ctrl+Shift+P, Arrow keys, Enter/Esc), and file save/load flows.
-- When adding future tests, colocate Rust integration tests under `tests/` and follow `snake_case` filenames.
+## Style & Naming
+- Rust 2021, rustfmt defaults.
+- TypeScript: 2-space indent, `strict` enabled in `tsconfig.json`. Keep state at module scope until it warrants a class.
+- Status strings: short, present tense ("untitled •", "save error: …").
+- New Tauri commands: snake_case, return `Result<T, String>` (stringify errors).
 
-## Commit & Pull Request Guidelines
-- Use descriptive, sentence-style commit messages (e.g., `Add command palette with action shortcuts`).
-- Each commit should format code and keep unrelated changes out; mention if `cargo check` succeeds.
-- PRs should summarize user-facing tweaks, list key shortcuts affected, and include screenshots only when UI layout changes substantially.
+## Adding Tauri Plugins
+When introducing a plugin (e.g. `tauri-plugin-fs`, `tauri-plugin-clipboard`):
+1. Add the Rust crate to `src-tauri/Cargo.toml`.
+2. Add the matching `@tauri-apps/plugin-…` npm package.
+3. Register in `src-tauri/src/main.rs` via `.plugin(plugin_x::init())`.
+4. Grant the required permission in `src-tauri/capabilities/default.json`.
 
-## Windows Native Notes
-- The project builds with stable Rust 1.90.0; no nightly override is required for edition 2024.
-- Native Windows development uses standard `cargo` commands and native `rfd` file dialogs.
+## Testing
+- No formal test suite. Verify via `npm run tauri dev` — exercise open/save flows, edit + dirty indicator, keybinds, error paths.
+- When adding tests, colocate Rust unit tests in `src-tauri/src/`; frontend tests can go in `src/__tests__/` once a runner is chosen.
+
+## Commits & PRs
+- Sentence-style commit messages ("Add tab bar with dirty indicators").
+- Mention which checks passed (`cargo check`, `npm run build`).
+- PRs: summarise user-facing changes; include screenshots when UI layout changes meaningfully.

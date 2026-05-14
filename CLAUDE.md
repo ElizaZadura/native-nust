@@ -2,43 +2,54 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Stack
+
+Tauri 2 (Rust backend, WebView2 frontend) + Vite + TypeScript + CodeMirror 6.
+Target platform is Windows-native; previous egui implementation lives under `legacy/`.
+
 ## Build & Run
 
-```bash
-cargo run                   # Build and launch
-cargo build --release
-cargo check                 # Type-check without launching
-cargo fmt                   # Format before committing
+```powershell
+npm install                 # first time only
+npm run tauri dev           # dev with hot reload (frontend + backend)
+npm run tauri build         # produce installer in src-tauri/target/release/bundle/
+npm run build               # frontend type-check + bundle only
+cd src-tauri && cargo check # backend type-check only
 ```
 
-Stable Rust 1.90.0 builds this project; no nightly override is required for edition 2024.
-
-There is no automated test suite. Verify changes manually with `cargo run`, focusing on pane interactions, command palette (Ctrl+Shift+P), and file save/load flows.
+No automated tests. Verify changes by running `npm run tauri dev` and exercising the open/save/edit flows.
 
 ## Architecture
 
-The entire application lives in `src/main.rs` (~960 lines). It uses `eframe` for the window and `egui` for immediate-mode UI rendering.
+### Backend (`src-tauri/`)
 
-**Core structs:**
+- `src/main.rs` exposes `read_file` and `write_file` as `#[tauri::command]` handlers; everything else (dialogs, window chrome) is handled by the Tauri/WebView2 layer.
+- `tauri.conf.json` defines the window (`label: "main"`, 1100×750, decorations on).
+- `capabilities/default.json` grants `core:default` + `dialog:default` to the main window. Add more granular grants here if new plugins are introduced.
+- File I/O is intentionally kept on the Rust side rather than going through `tauri-plugin-fs`, which would require broader filesystem permissions.
 
-- `Pane` — one editing surface (left or right). Holds `title`, `path`, `text`, `dirty` flag, and scroll state. Provides `load_from()`, `save()`, `save_as()`.
-- `App` — top-level application state: two `Pane` instances, focused pane, dialog/command palette state, and a list of registered `AppAction`s with their shortcuts.
+### Frontend (`src/`)
 
-**Key enum: `AppAction`** — covers Open, Save, SaveAs, QuickSave, Close, Focus, Layout (single/split), ToggleWordWrap. All user intent routes through `perform_action()`.
+- `main.ts` constructs the CodeMirror `EditorView`, wires the toolbar buttons + Ctrl+O/S/Shift+S, and calls the Tauri `dialog` plugin + invoke handlers for file I/O.
+- State is currently global module-scope (`currentPath`, `dirty`). When tabs land, this becomes a per-tab record.
+- Theme is a single `EditorView.theme(...)` block in `main.ts` — keep dark-theme tweaks there until it grows.
 
-**UI flow per frame:**
-1. `update()` draws top menu, status bar, and one or two pane panels.
-2. `process_shortcuts()` translates keyboard input to `AppAction`.
-3. `command_palette_ui()` renders the searchable overlay (Ctrl+Shift+P) and emits actions on Enter.
-4. `perform_action()` mutates `App`/`Pane` state or triggers file I/O.
+### Frontend ↔ Backend contract
 
-**Quick save** writes timestamped files (`nust_<pane>_<timestamp>.txt`) to `target/quick_saves/` (or system temp as fallback). This directory is `.gitignore`d.
+| Frontend call | Backend handler | Notes |
+|---|---|---|
+| `invoke("read_file", { path })` | `read_file(path) -> Result<String, String>` | Errors stringified |
+| `invoke("write_file", { path, content })` | `write_file(path, content) -> Result<(), String>` | Overwrites |
+| `openDialog({ filters })` | plugin-dialog | Returns absolute path or null |
+| `saveDialog({ filters, defaultPath })` | plugin-dialog | Returns absolute path or null |
 
-**Native file dialogs:** open/save flows use `rfd` directly.
+## Conventions
 
-## Coding Conventions
+- Status messages: short, present-tense ("save error: …", "untitled •"). Render via `renderStatus()` so the dirty indicator stays consistent.
+- Add a new Tauri command only when the frontend genuinely needs OS access; prefer doing logic in TypeScript.
+- When adding plugins (e.g. `tauri-plugin-fs`, `tauri-plugin-clipboard`), also add the matching permission to `src-tauri/capabilities/default.json`.
+- Commit messages: sentence-style ("Add tab bar with dirty indicators"). Note if `cargo check` and/or `npm run build` pass.
 
-- Status messages should be short and actionable ("Split view enabled").
-- Keep UI logic in `App`; extract helper structs/enums when a concept grows.
-- Use the existing `nust_<pane>_<timestamp>.txt` naming for any quick-save variant.
-- Commit messages: sentence-style (`Add command palette with action shortcuts`). Note if `cargo check` passes.
+## Legacy
+
+`legacy/main.rs` and `legacy/Cargo.toml` are the egui dual-pane editor this project started as. Keep around as reference for UX decisions (command palette layout, shortcut choices, quick-save semantics) — do not import code from it.

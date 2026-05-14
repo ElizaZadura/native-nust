@@ -1,2 +1,15 @@
-/target
+# Frontend
+node_modules/
+dist/
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/
+target/
+
+# Legacy egui artefacts (kept for reference under legacy/)
 target/quick_saves/
+
+# OS / editor
+.DS_Store
+*.log
