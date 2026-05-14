@@ -1,59 +1,61 @@
 # Nust
 
-A minimal, keyboard-driven text editor for Windows. Up to four resizable panes, a command palette, and no chrome in the way.
+A keyboard-driven markdown editor for Windows. Tauri shell, Rust backend, CodeMirror 6 frontend.
 
-Built with Rust and [egui](https://github.com/emilk/egui).
+> **Status:** under active rework. The previous egui prototype lives under `legacy/`.
+
+## Prerequisites
+
+- **Rust** (stable) — install from [rustup.rs](https://rustup.rs)
+- **Visual Studio Build Tools** with "Desktop development with C++" workload
+- **Node.js 20+** — install from [nodejs.org](https://nodejs.org) or via winget
+- **WebView2** — bundled with Windows 11; Windows 10 may need the [Evergreen Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)
 
 ## Quick Start
 
-Install [Rust](https://rustup.rs) (the `.exe` installer), then in a terminal:
-
 ```powershell
-cargo run
+npm install
+npm run tauri dev
 ```
 
-No environment variables, no workarounds. Native file dialogs work out of the box.
-
-## Layout
-
-Panes fill in order: top-left → top-right → bottom-left → bottom-right.
-
-| Shortcut | Layout |
-|----------|--------|
-| `Ctrl+1` | Single pane |
-| `Ctrl+2` | Side by side |
-| `Ctrl+3` | Left column split, right single |
-| `Ctrl+4` | 2×2 grid |
-
-All dividers are mouse-draggable to resize. The thin strip at the very top of the window is the drag handle for moving it.
-
-## Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+P` | Open / close command palette |
-| `Ctrl+O` | Open file into focused pane |
-| `Ctrl+S` | Save |
-| `Ctrl+Shift+S` | Save As |
-| `Ctrl+Alt+S` | Quick save (timestamped, no dialog) |
-| `Ctrl+W` | Close focused pane |
-| `Ctrl+Tab` | Focus next pane |
-| `Ctrl+Shift+Tab` | Focus previous pane |
-| `Ctrl+Alt+W` | Toggle word wrap |
-| `PageUp / PageDown` | Scroll focused pane |
-
-The command palette (`Ctrl+Shift+P`) lists every action with its shortcut. Type to filter, `↑/↓` to navigate, `Enter` to run.
-
-## Quick Save
-
-`Ctrl+Alt+S` writes a timestamped file to `target/quick_saves/` (falls back to the system temp dir). No dialog, no interruption. Files are named `nust_<pane>_<timestamp>.txt`.
+Vite serves the frontend at `http://localhost:1420`; Tauri opens a native window pointing at it. Hot-reload works for both frontend and backend.
 
 ## Build
 
 ```powershell
-cargo build --release   # optimised binary → target/release/nust.exe
-cargo check             # type-check only
-cargo fmt               # format before committing
+npm run tauri build
 ```
 
-Requires stable Rust 1.90.0 or later.
+Produces an installer under `src-tauri/target/release/bundle/`.
+
+## Project Layout
+
+```
+nust/
+├── index.html              # frontend entry
+├── src/                    # TypeScript + CSS (CodeMirror)
+│   ├── main.ts
+│   └── style.css
+├── src-tauri/              # Rust backend
+│   ├── Cargo.toml
+│   ├── tauri.conf.json
+│   ├── capabilities/       # Tauri 2 permission grants
+│   └── src/main.rs         # invoke handlers (read_file, write_file)
+├── legacy/                 # previous egui implementation, for reference
+└── package.json
+```
+
+## Current Feature Set (step 1 of the rewrite)
+
+- Open / Save / Save As via native dialogs (`Ctrl+O`, `Ctrl+S`, `Ctrl+Shift+S`)
+- CodeMirror 6 editor with markdown syntax, line numbers, undo/redo
+- Dark theme, single pane
+
+## Planned
+
+- **Step 2** — tab bar, multi-file support, dirty indicators, close confirmation
+- **Step 3** — split markdown preview (toggle or side-by-side), keybinds for tables / bold / italic / heading / list reflow
+
+## Legacy
+
+The original egui-based dual-pane editor is preserved under `legacy/` (main.rs + its Cargo.toml). Build it with `cargo run` inside `legacy/` if you need to refer back to behaviour.
