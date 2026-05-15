@@ -13,3 +13,6 @@ target/quick_saves/
 # OS / editor
 .DS_Store
 *.log
+
+# Local Claude Code state
+.claude/
