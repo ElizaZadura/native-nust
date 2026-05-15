@@ -9,12 +9,30 @@
   <body>
     <div id="app">
       <div id="toolbar">
+        <button id="sidebar-toggle-btn" title="Toggle sidebar">☰</button>
         <button id="open-btn">Open</button>
         <button id="save-btn">Save</button>
         <button id="save-as-btn">Save As</button>
+        <button id="new-tab-btn">New</button>
+        <button id="split-right-btn" title="Split right">Split →</button>
+        <button id="split-down-btn" title="Split down">Split ↓</button>
+        <button id="close-pane-btn">Close Pane</button>
         <span id="status">ready</span>
       </div>
-      <div id="editor"></div>
+      <div id="main">
+        <aside id="sidebar" class="hidden">
+          <div id="sidebar-header">
+            <span id="sidebar-title">No folder</span>
+            <button id="sidebar-open-btn" title="Open folder">📁</button>
+          </div>
+          <div id="sidebar-tree"></div>
+        </aside>
+        <div id="workspace"></div>
+      </div>
+      <div id="palette" class="palette hidden" role="dialog" aria-label="Command palette">
+        <input id="palette-input" type="text" placeholder="Type a command..." autocomplete="off" spellcheck="false" />
+        <ul id="palette-list"></ul>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
